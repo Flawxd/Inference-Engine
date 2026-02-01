@@ -1,0 +1,7 @@
+% inference-engine/examples/family.rules
+% TODO: Define family relationship rules
+%
+% Example:
+%   parent(tom, bob).
+%   parent(bob, ann).
+%   grandparent(X, Z) :- parent(X, Y), parent(Y, Z).

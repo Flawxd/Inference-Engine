@@ -1,0 +1,14 @@
+// inference-engine/src/parser/grammar.pest
+//
+// TODO: Define full PEG grammar rules for the inference engine language
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+program    = { SOI ~ statement* ~ EOI }
+statement  = { rule_def | fact_def }
+rule_def   = { term ~ ":-" ~ term_list ~ "." }
+fact_def   = { term ~ "." }
+term       = { (atom | variable) ~ ("(" ~ term_list ~ ")")? }
+term_list  = { term ~ ("," ~ term)* }
+atom       = @{ ASCII_ALPHA_LOWER ~ (ASCII_ALPHANUMERIC | "_")* }
+variable   = @{ ASCII_ALPHA_UPPER ~ (ASCII_ALPHANUMERIC | "_")* }

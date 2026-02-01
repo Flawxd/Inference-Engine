@@ -1,0 +1,7 @@
+% inference-engine/examples/trading.rules
+% TODO: Define trading/market rules
+%
+% Example:
+%   price(aapl, 150).
+%   volume(aapl, high).
+%   buy_signal(X) :- price(X, P), volume(X, high).

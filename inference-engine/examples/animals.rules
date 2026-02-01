@@ -1,0 +1,8 @@
+% inference-engine/examples/animals.rules
+% TODO: Define animal classification rules
+%
+% Example:
+%   cat(tom).
+%   dog(rex).
+%   animal(X) :- cat(X).
+%   animal(X) :- dog(X).
