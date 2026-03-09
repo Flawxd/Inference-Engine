@@ -1,5 +1,6 @@
 use std::collections::{HashSet, HashMap};
 use crate::types::{Substitution, Term, Rule, KnowledgeBase, ProofTree};
+use crate::unification::{unify, apply_substitution, occurs_check, compose};
 
 pub fn backward_chain(goal: &Term, kb: &KnowledgeBase) -> Option<ProofTree> {
     let mut visited = HashSet::new();
@@ -67,26 +68,6 @@ fn prove(
     }
 
     None
-}
-
-/// Applique une substitution à un terme (utilise la fonction d'unification de Paul).
-pub fn apply_substitution(_term: &Term, _subst: &Substitution) -> Term {
-    crate::unification::apply_substitution(_term, _subst)
-}
-
-/// Unifie deux termes (utilise la fonction d'unification de Paul).
-pub fn unify(_t1: &Term, _t2: &Term) -> Option<Substitution> {
-    crate::unification::unify(_t1, _t2)
-}
-
-/// Vérifie l'occurrence d'une variable dans un terme (utilise la fonction d'unification de Paul).
-pub fn occurs_check(_var: &str, _term: &Term) -> bool {
-    crate::unification::occurs_check(_var, _term)
-}
-
-/// Compose deux substitutions (utilise la fonction d'unification de Paul).
-pub fn compose(_s1: &Substitution, _s2: &Substitution) -> Substitution {
-    crate::unification::compose(_s1, _s2)
 }
 
 /// Formate une règle en chaîne de caractères pour affichage dans l'arbre de preuve.
