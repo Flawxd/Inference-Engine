@@ -34,13 +34,13 @@ impl KnowledgeBase {
         }
     }
     pub fn add_fact(&mut self, fact: Fact) -> bool {
-		match self.facts.contains(&fact) {
-			true => {
-				self.facts.push(fact);
-				true
-			}
-			_ => false
-		}
+        match self.facts.contains(&fact) {
+            false => {
+                self.facts.push(fact);
+                true
+            }
+            _ => false,
+        }
     }
     pub fn add_rule(&mut self, rule: Rule) {
         self.rules.push(rule);

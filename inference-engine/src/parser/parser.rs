@@ -187,7 +187,9 @@ impl Parser {
         let mut kb = KnowledgeBase::new();
         while self.peek().is_some() {
             match self.parse_clause() {
-                Ok((Some(fact), None)) => {kb.add_fact(fact);}
+                Ok((Some(fact), None)) => {
+                    kb.add_fact(fact);
+                }
                 Ok((None, Some(rule))) => kb.add_rule(rule),
                 _ => break,
             }

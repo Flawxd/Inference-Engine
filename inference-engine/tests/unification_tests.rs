@@ -31,10 +31,7 @@ fn test_unify_different_atoms_fails() {
 fn test_unify_compound_terms() {
     let t1 = Compound {
         functor: "parent".to_string(),
-        args: vec![
-            Variable("X".to_string()),
-            Atom("bob".to_string()),
-        ],
+        args: vec![Variable("X".to_string()), Atom("bob".to_string())],
     };
     let t2 = Compound {
         functor: "parent".to_string(),

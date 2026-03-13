@@ -1,13 +1,13 @@
-use std::fmt;
-use crate::types::*;
 use crate::types::Term::*;
+use crate::types::*;
+use std::fmt;
 
 impl fmt::Display for Term {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Atom(nom) => write!(f, "{}", nom),
             Variable(nom) => write!(f, "{}", nom),
-            Compound{functor, args} => {
+            Compound { functor, args } => {
                 let chaine_args: Vec<String> = args.iter().map(|a| a.to_string()).collect();
                 write!(f, "{}({})", functor, chaine_args.join(", "))
             }
@@ -18,7 +18,7 @@ impl fmt::Display for Term {
 fn resoudre(terme: &Term, substitution: &Substitution) -> Term {
     match terme {
         Variable(nom) => match substitution.get(nom) {
-            Some(lie) => resoudre(&Variable(lie.to_string()), substitution),
+            Some(lie) => resoudre(&Atom(lie.to_string()), substitution),
             None => terme.clone(),
         },
         _ => terme.clone(),
@@ -29,7 +29,7 @@ fn apparait_dans(variable: &str, terme: &Term, substitution: &Substitution) -> b
     match resoudre(terme, substitution) {
         Atom(_) => false,
         Variable(nom) => nom == variable,
-        Compound{functor: _, args} => args
+        Compound { functor: _, args } => args
             .iter()
             .any(|a| apparait_dans(variable, a, substitution)),
     }
@@ -61,7 +61,16 @@ fn unifier_mut(t1: &Term, t2: &Term, substitution: &mut Substitution) -> Option<
             substitution.insert(nom.clone(), t1.to_string());
             Some(())
         }
-        (Compound{functor: f1, args: args1}, Compound{functor: f2, args: args2}) => {
+        (
+            Compound {
+                functor: f1,
+                args: args1,
+            },
+            Compound {
+                functor: f2,
+                args: args2,
+            },
+        ) => {
             if f1 != f2 || args1.len() != args2.len() {
                 return None;
             }
@@ -78,15 +87,21 @@ pub fn appliquer_substitution(terme: &Term, substitution: &Substitution) -> Term
     match terme {
         Atom(_) => terme.clone(),
         Variable(nom) => match substitution.get(nom) {
-            Some(lie) => appliquer_substitution(&Variable(lie.to_string()), substitution),
+            Some(lie) => appliquer_substitution(&Atom(lie.to_string()), substitution),
             None => terme.clone(),
         },
-        Compound{functor, args: arguments} => {
+        Compound {
+            functor,
+            args: arguments,
+        } => {
             let args = arguments
                 .iter()
                 .map(|a| appliquer_substitution(a, substitution))
                 .collect();
-            Compound {functor: functor.clone(), args: args}
+            Compound {
+                functor: functor.clone(),
+                args: args,
+            }
         }
     }
 }
@@ -117,11 +132,19 @@ mod tests {
     }
     #[test]
     fn test_verification_occurrence() {
-        assert!(unifier(&var("X"), &compose("f", vec![var("X")]), Substitution::new()).is_none());
+        assert!(unifier(
+            &var("X"),
+            &compose("f", vec![var("X")]),
+            Substitution::new()
+        )
+        .is_none());
     }
     #[test]
     fn test_appliquer_substitution() {
-        let terme = Compound{functor: "mammifere".to_string(), args: vec![var("X")]};
+        let terme = Compound {
+            functor: "mammifere".to_string(),
+            args: vec![var("X")],
+        };
         let mut substitution = Substitution::new();
         substitution.insert("X".to_string(), cst("chat").to_string());
         assert_eq!(
@@ -136,6 +159,9 @@ mod tests {
         Variable(nom.to_string())
     }
     fn compose(foncteur: &str, args: Vec<Term>) -> Term {
-        Compound{functor: foncteur.to_string(), args}
+        Compound {
+            functor: foncteur.to_string(),
+            args,
+        }
     }
 }
