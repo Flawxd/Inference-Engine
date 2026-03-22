@@ -3,7 +3,6 @@ use inference_engine::types::Term::*;
 use inference_engine::types::*;
 
 #[test]
-#[ignore]
 fn test_unify_identical_atoms() {
     let t1 = Atom("cat".to_string());
     let t2 = Atom("cat".to_string());
@@ -11,7 +10,6 @@ fn test_unify_identical_atoms() {
 }
 
 #[test]
-#[ignore]
 fn test_unify_variable_with_atom() {
     let t1 = Variable("X".to_string());
     let t2 = Atom("cat".to_string());
@@ -19,7 +17,6 @@ fn test_unify_variable_with_atom() {
 }
 
 #[test]
-#[ignore]
 fn test_unify_different_atoms_fails() {
     let t1 = Atom("cat".to_string());
     let t2 = Atom("dog".to_string());
@@ -27,7 +24,6 @@ fn test_unify_different_atoms_fails() {
 }
 
 #[test]
-#[ignore]
 fn test_unify_compound_terms() {
     let t1 = Compound {
         functor: "parent".to_string(),
@@ -41,7 +37,6 @@ fn test_unify_compound_terms() {
 }
 
 #[test]
-#[ignore]
 fn test_occurs_check() {
     let t1 = Variable("X".to_string());
     let t2 = Compound {

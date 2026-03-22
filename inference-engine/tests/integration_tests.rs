@@ -3,7 +3,6 @@ use inference_engine::types::Term::*;
 use inference_engine::types::*;
 
 #[test]
-#[ignore]
 fn test_engine_creation() {
     let kb = KnowledgeBase::new();
     let _engine = Engine::new(kb);
@@ -135,11 +134,9 @@ fn test_forward_chaining_derives_facts() {
 }
 
 #[test]
-#[ignore]
 fn test_backward_chaining_proves_goal() {
     let _kb = KnowledgeBase::new();
 }
 
 #[test]
-#[ignore]
 fn test_load_and_query_rules_file() {}
