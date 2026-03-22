@@ -1,4 +1,4 @@
-use crate::engine::unification::{appliquer_substitution, unifier};
+use crate::engine::unification::{apply_substitution, unify};
 use crate::types::*;
 
 pub fn forward_chain(kb: &mut KnowledgeBase) -> usize {
@@ -10,7 +10,7 @@ pub fn forward_chain(kb: &mut KnowledgeBase) -> usize {
         for rule in &kb.rules {
             for sub in find_subs(&kb.facts, rule) {
                 facts.push( Fact {
-					term: appliquer_substitution(&rule.head, &sub)
+					term: apply_substitution(&rule.head, &sub)
 				});
 			}
         }
@@ -44,7 +44,7 @@ fn find_subs(facts: &[Fact], rule: &Rule) -> Vec<Substitution> {
 fn equate(term: &Term, facts: &[Fact]) -> Vec<Substitution> {
 	let mut res = vec![];
 	for fact in facts {
-		match unifier(term, &fact.term, Substitution::new()) {
+		match unify(term, &fact.term, Substitution::new()) {
 			Some(s) => res.push(s),
 			_ => (),
 		}

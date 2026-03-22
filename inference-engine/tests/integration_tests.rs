@@ -167,13 +167,13 @@ fn demo_unification() {
     let t2 = Compound { functor: "parent".into(), args: vec![Atom("alice".into()), Atom("bob".into())] };
     println!("Unify: {:?}", t1);
     println!("With:  {:?}", t2);
-    let result = unification::unifier(&t1, &t2, Substitution::new());
+    let result = unification::unify(&t1, &t2, Substitution::new());
     println!("Result: {:?}", result);
 
     let t3 = Atom("chat".into());
     let t4 = Atom("chien".into());
     println!("\nUnify: {:?} with {:?}", t3, t4);
-    println!("Result: {:?}", unification::unifier(&t3, &t4, Substitution::new()));
+    println!("Result: {:?}", unification::unify(&t3, &t4, Substitution::new()));
 }
 
 #[test]

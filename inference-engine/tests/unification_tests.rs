@@ -6,21 +6,21 @@ use inference_engine::types::*;
 fn test_unify_identical_atoms() {
     let t1 = Atom("cat".to_string());
     let t2 = Atom("cat".to_string());
-    let _result = unification::unifier(&t1, &t2, Substitution::new());
+    let _result = unification::unify(&t1, &t2, Substitution::new());
 }
 
 #[test]
 fn test_unify_variable_with_atom() {
     let t1 = Variable("X".to_string());
     let t2 = Atom("cat".to_string());
-    let _result = unification::unifier(&t1, &t2, Substitution::new());
+    let _result = unification::unify(&t1, &t2, Substitution::new());
 }
 
 #[test]
 fn test_unify_different_atoms_fails() {
     let t1 = Atom("cat".to_string());
     let t2 = Atom("dog".to_string());
-    let _result = unification::unifier(&t1, &t2, Substitution::new());
+    let _result = unification::unify(&t1, &t2, Substitution::new());
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn test_unify_compound_terms() {
         functor: "parent".to_string(),
         args: vec![Atom("tom".to_string()), Atom("bob".to_string())],
     };
-    let _result = unification::unifier(&t1, &t2, Substitution::new());
+    let _result = unification::unify(&t1, &t2, Substitution::new());
 }
 
 #[test]
@@ -43,5 +43,5 @@ fn test_occurs_check() {
         functor: "f".to_string(),
         args: vec![Variable("X".to_string())],
     };
-    let _result = unification::unifier(&t1, &t2, Substitution::new());
+    let _result = unification::unify(&t1, &t2, Substitution::new());
 }

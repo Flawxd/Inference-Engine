@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap};
 use crate::types::{Substitution, Term, Rule, KnowledgeBase, ProofTree, Fact};
-use crate::engine::unification::{unifier, appliquer_substitution};
+use crate::engine::unification::{unify, apply_substitution};
 
 pub fn backward_chain(goal: &Term, kb: &KnowledgeBase) -> Option<ProofTree> {
     let mut visited = HashSet::new();
@@ -15,7 +15,7 @@ fn prove(
     subst: &Substitution,
     visited: &mut HashSet<Term>,
 ) -> Option<ProofTree> {
-    let goal_instantiated = appliquer_substitution(goal, subst);
+    let goal_instantiated = apply_substitution(goal, subst);
 
     if visited.contains(&goal_instantiated) {
         return None;
@@ -31,7 +31,7 @@ fn prove(
     }
 
     for rule in rules {
-        if let Some(theta) = unifier(&goal_instantiated, &rule.head, Substitution::new()) {
+        if let Some(theta) = unify(&goal_instantiated, &rule.head, Substitution::new()) {
             let mut new_subst = subst.clone();
             for (k, v) in theta {
                 new_subst.insert(k, v);
@@ -39,7 +39,7 @@ fn prove(
 
             let mut subgoal_terms = Vec::new();
             for b in &rule.body {
-                subgoal_terms.push(appliquer_substitution(b, &new_subst));
+                subgoal_terms.push(apply_substitution(b, &new_subst));
             }
 
             let mut subproofs = Vec::new();
