@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap};
-use crate::types::{Substitution, Term, Rule, KnowledgeBase, ProofTree};
-use crate::unification::{unify, apply_substitution, occurs_check, compose};
+use crate::types::{Substitution, Term, Rule, KnowledgeBase, ProofTree, Fact};
+use crate::engine::unification::{unifier, appliquer_substitution};
 
 pub fn backward_chain(goal: &Term, kb: &KnowledgeBase) -> Option<ProofTree> {
     let mut visited = HashSet::new();
@@ -10,19 +10,19 @@ pub fn backward_chain(goal: &Term, kb: &KnowledgeBase) -> Option<ProofTree> {
 /// Fonction récursive qui tente de prouver un but avec une substitution courante.
 fn prove(
     goal: &Term,
-    facts: &HashSet<Term>,
+    facts: &[Fact],
     rules: &[Rule],
     subst: &Substitution,
     visited: &mut HashSet<Term>,
 ) -> Option<ProofTree> {
-    let goal_instantiated = apply_substitution(goal, subst);
+    let goal_instantiated = appliquer_substitution(goal, subst);
 
     if visited.contains(&goal_instantiated) {
         return None;
     }
     visited.insert(goal_instantiated.clone());
 
-    if facts.contains(&goal_instantiated) {
+    if facts.iter().any(|f| f.term == goal_instantiated) {
         return Some(ProofTree {
             goal: goal_instantiated,
             subgoals: Vec::new(),
@@ -31,7 +31,7 @@ fn prove(
     }
 
     for rule in rules {
-        if let Some(theta) = unify(&goal_instantiated, &rule.head) {
+        if let Some(theta) = unifier(&goal_instantiated, &rule.head, Substitution::new()) {
             let mut new_subst = subst.clone();
             for (k, v) in theta {
                 new_subst.insert(k, v);
@@ -39,7 +39,7 @@ fn prove(
 
             let mut subgoal_terms = Vec::new();
             for b in &rule.body {
-                subgoal_terms.push(apply_substitution(b, &new_subst));
+                subgoal_terms.push(appliquer_substitution(b, &new_subst));
             }
 
             let mut subproofs = Vec::new();
@@ -84,14 +84,14 @@ fn format_rule(rule: &Rule) -> String {
 /// Formate un terme en chaîne de caractères.
 fn format_term(term: &Term) -> String {
     match term {
-        Term::Constant(c) => c.clone(),
+        Term::Atom(c) => c.clone(),
         Term::Variable(v) => v.clone(),
-        Term::Compound(name, args) => {
+        Term::Compound { functor, args } => {
             if args.is_empty() {
-                name.clone()
+                functor.clone()
             } else {
                 let args_str: Vec<String> = args.iter().map(format_term).collect();
-                format!("{}({})", name, args_str.join(", "))
+                format!("{}({})", functor, args_str.join(", "))
             }
         }
     }

@@ -26,6 +26,13 @@ pub struct KnowledgeBase {
     pub rules: Vec<Rule>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProofTree {
+    pub goal: Term,
+    pub subgoals: Vec<ProofTree>,
+    pub rule_used: Option<String>,
+}
+
 impl KnowledgeBase {
     pub fn new() -> Self {
         Self {

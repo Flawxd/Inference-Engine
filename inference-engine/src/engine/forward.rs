@@ -32,7 +32,6 @@ fn find_subs(facts: &[Fact], rule: &Rule) -> Vec<Substitution> {
             new.push(sub);
         }
         res = if res.is_empty() {
-			dbg!(&new);
 			new
 		} else {
 			update_subs(&res, &new)
@@ -43,7 +42,6 @@ fn find_subs(facts: &[Fact], rule: &Rule) -> Vec<Substitution> {
 }
 
 fn equate(term: &Term, facts: &[Fact]) -> Vec<Substitution> {
-	dbg!(term);
 	let mut res = vec![];
 	for fact in facts {
 		match unifier(term, &fact.term, Substitution::new()) {

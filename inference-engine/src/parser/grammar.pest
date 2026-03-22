@@ -1,7 +1,3 @@
-// inference-engine/src/parser/grammar.pest
-//
-// TODO: Define full PEG grammar rules for the inference engine language
-
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 program    = { SOI ~ statement* ~ EOI }

@@ -68,6 +68,7 @@ fn tokenize(input: &str) -> Vec<Token> {
             // Atoms start with a lowercase letter
             c if c.is_ascii_lowercase() => {
                 let mut s = String::new();
+                s.push(chars.next().unwrap());
                 while chars
                     .peek()
                     .map(|c| c.is_alphanumeric() || *c == '_')
@@ -81,6 +82,7 @@ fn tokenize(input: &str) -> Vec<Token> {
             // Variables start with uppercase or _
             c if c.is_ascii_uppercase() || c == '_' => {
                 let mut s = String::new();
+                s.push(chars.next().unwrap());
                 while chars
                     .peek()
                     .map(|c| c.is_alphanumeric() || *c == '_')
