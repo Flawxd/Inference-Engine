@@ -1,4 +1,5 @@
 use inference_engine::engine::*;
+use inference_engine::parser::parser;
 use inference_engine::types::Term::*;
 use inference_engine::types::*;
 
@@ -140,3 +141,82 @@ fn test_backward_chaining_proves_goal() {
 
 #[test]
 fn test_load_and_query_rules_file() {}
+
+// ── Demo tests ── run with: cargo test demo_ -- --nocapture ──
+
+#[test]
+fn demo_parser() {
+    let input = "animal(chat). a_fourrure(chat). mammifere(X) :- animal(X), a_fourrure(X).";
+    println!("\n=== PARSER DEMO ===");
+    println!("Input: {}", input);
+    let kb = parser::parse(input);
+    println!("Facts:");
+    for f in &kb.facts {
+        println!("  {:?}", f.term);
+    }
+    println!("Rules:");
+    for r in &kb.rules {
+        println!("  {:?} :- {:?}", r.head, r.body);
+    }
+}
+
+#[test]
+fn demo_unification() {
+    println!("\n=== UNIFICATION DEMO ===");
+    let t1 = Compound { functor: "parent".into(), args: vec![Variable("X".into()), Variable("Y".into())] };
+    let t2 = Compound { functor: "parent".into(), args: vec![Atom("alice".into()), Atom("bob".into())] };
+    println!("Unify: {:?}", t1);
+    println!("With:  {:?}", t2);
+    let result = unification::unifier(&t1, &t2, Substitution::new());
+    println!("Result: {:?}", result);
+
+    let t3 = Atom("chat".into());
+    let t4 = Atom("chien".into());
+    println!("\nUnify: {:?} with {:?}", t3, t4);
+    println!("Result: {:?}", unification::unifier(&t3, &t4, Substitution::new()));
+}
+
+#[test]
+fn demo_forward_chaining() {
+    println!("\n=== FORWARD CHAINING DEMO ===");
+    let mut kb = parser::parse("animal(chat). a_fourrure(chat). animal(grenouille). mammifere(X) :- animal(X), a_fourrure(X).");
+    println!("Initial facts:");
+    for f in &kb.facts { println!("  {}", f.term); }
+    println!("Rules:");
+    for r in &kb.rules { println!("  {} :- {}", r.head, r.body.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(", ")); }
+
+    let new_facts = forward::forward_chain(&mut kb);
+    println!("New facts derived: {}", new_facts);
+    println!("All facts after forward chaining:");
+    for f in &kb.facts { println!("  {}", f.term); }
+}
+
+#[test]
+fn demo_backward_chaining() {
+    println!("\n=== BACKWARD CHAINING DEMO ===");
+    let kb = parser::parse("animal(chat). a_fourrure(chat). mammifere(X) :- animal(X), a_fourrure(X).");
+    let goal = Compound { functor: "mammifere".into(), args: vec![Atom("chat".into())] };
+    println!("Goal: {}", goal);
+    match backward::backward_chain(&goal, &kb) {
+        Some(proof) => print_proof(&proof, 0),
+        None => println!("  Not provable."),
+    }
+
+    let goal2 = Compound { functor: "mammifere".into(), args: vec![Atom("chien".into())] };
+    println!("\nGoal: {}", goal2);
+    match backward::backward_chain(&goal2, &kb) {
+        Some(proof) => print_proof(&proof, 0),
+        None => println!("  Not provable."),
+    }
+}
+
+fn print_proof(proof: &ProofTree, depth: usize) {
+    let indent = "  ".repeat(depth + 1);
+    match &proof.rule_used {
+        Some(rule) => println!("{}Proved: {} (via {})", indent, proof.goal, rule),
+        None => println!("{}Proved: {} (fact)", indent, proof.goal),
+    }
+    for sub in &proof.subgoals {
+        print_proof(sub, depth + 1);
+    }
+}

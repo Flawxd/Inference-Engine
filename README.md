@@ -1,21 +1,43 @@
-## Installation & Exécution
+## Installation & Execution
 
 Besoin d'avoir [Rust et Cargo](https://www.rust-lang.org/tools/install) installés sur votre système.
 
 ### Compiler le projet
-Pour compiler le code source :
 ```bash
 cargo build
 ```
+
 ### Lancer le projet
-Pour compiler et exécuter le projet en une seule commande :
 ```bash
 cargo run
 ```
-Le projet n'execute rien pour l'instant
 
-### Lancer les tests de la POC
-Le projet inclut des tests unitaires pour valider les différents modules (Parser, Unification, Chaînages). Pour exécuter l'ensemble de la suite de tests :
+### Lancer les tests
+
+Tous les tests :
 ```bash
 cargo test
+```
+
+Tests d'un module spécifique :
+```bash
+cargo test parser
+cargo test unification
+cargo test forward
+cargo test backward
+```
+
+### Demos visuelles
+
+Afficher les résultats de tous les modules :
+```bash
+cargo test demo_ -- --nocapture --test-threads=1
+```
+
+Demo d'un seul module :
+```bash
+cargo test demo_parser -- --nocapture
+cargo test demo_unification -- --nocapture
+cargo test demo_forward -- --nocapture
+cargo test demo_backward -- --nocapture
 ```
