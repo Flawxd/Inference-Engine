@@ -8,4 +8,7 @@ pest = "2"
 pest_derive = "2"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
+image = "0.25"
+imageproc = "0.25"
+ab_glyph = "0.2"
 

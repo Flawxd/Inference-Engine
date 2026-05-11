@@ -220,3 +220,17 @@ fn print_proof(proof: &ProofTree, depth: usize) {
         print_proof(sub, depth + 1);
     }
 }
+#[test]
+fn test_proof_tree_png() {
+    use inference_engine::engine::backward::backward_chain;
+    use inference_engine::visualize::proof_tree_to_png;
+    use inference_engine::types::Term::*;
+
+    let kb = parser::parse("animal(chat). a_fourrure(chat). mammifere(X) :- animal(X), a_fourrure(X).");
+    let goal = Compound { functor: "mammifere".into(), args: vec![Atom("chat".into())] };
+    let tree = backward_chain(&goal, &kb).expect("should prove goal");
+    proof_tree_to_png(&tree, "proof_test.png").expect("should generate png");
+
+    assert!(std::path::Path::new("proof_test.png").exists());
+    std::fs::remove_file("proof_test.png").ok();
+}
