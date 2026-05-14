@@ -1,5 +1,5 @@
 use crate::engine::unification::{apply_substitution, unify};
-use crate::types::*;
+use crate::types::{*, Term::*};
 
 pub fn forward_chain(kb: &mut KnowledgeBase) -> usize {
     let mut facts = vec![];
@@ -38,7 +38,7 @@ fn find_subs(facts: &[Fact], rule: &Rule) -> Vec<Substitution> {
 		};
 		new = vec![];
     }
-    res
+	res.into_iter().filter(|x| x.len() == count_vars(rule)).collect()
 }
 
 fn equate(term: &Term, facts: &[Fact]) -> Vec<Substitution> {
@@ -77,3 +77,19 @@ fn update_subs(old: &[Substitution], new: &[Substitution]) -> Vec<Substitution> 
 	res
 }
 
+fn count_vars(rule: &Rule) -> usize {
+	let mut vars = vec![];
+	term_vars(&rule.head, &mut vars);
+	rule.body.iter().for_each(|t| term_vars(t, &mut vars));
+	vars.len()
+}
+
+fn term_vars(t: &Term, mut vars: &mut Vec<String>) {
+	match t {
+		Atom(_) => (),
+		Variable(v) => if !vars.contains(v) {
+			vars.push(v.to_string())
+		},
+		Compound{functor: _, args} => args.iter().for_each(|a| term_vars(a, &mut vars))
+	}
+}

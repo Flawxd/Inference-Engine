@@ -11,4 +11,10 @@ serde = { version = "1", features = ["derive"] }
 image = "0.25"
 imageproc = "0.25"
 ab_glyph = "0.2"
+dioxus = "0.7.9"
+base64 = "0.22.1"
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false }
 
+[features]
+default = ["desktop"]
+desktop = ["dioxus/desktop"]

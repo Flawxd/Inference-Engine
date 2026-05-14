@@ -1,0 +1,9 @@
+cat(tom).
+dog(rex).
+animal(X) :- cat(X).
+animal(X) :- dog(X).
+parent(tom, bob).
+parent(bob, ann).
+grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
+volume(aapl, high).
+buy_signal(X) :- price(X, P), volume(X, high).

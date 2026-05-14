@@ -3,3 +3,4 @@ pub mod engine;
 pub mod parser;
 pub mod types;
 pub mod visualize;
+pub mod gui;

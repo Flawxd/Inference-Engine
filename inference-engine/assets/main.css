@@ -1,0 +1,66 @@
+html, body {
+    background-color: #241f31;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    flex-direction: row;
+}
+#title {
+    text-align: center;
+    height: 10vh;
+}
+#content, #left, #parser, #kb, #chain {
+    display: flex;
+    justify-content: space-evenly;
+}
+#content {
+    display: flex;
+    flex-direction: row;
+    height: 80vh;
+    margin: auto;
+}
+#backwards {
+    display: flex;
+    gap: 1rem;
+}
+#left, #backwards, #parser, #kb, #chain {
+    flex-direction: column;
+}
+#left, #backwards {
+    height: 80vh;
+    flex: 0.45;
+}
+#chain, #parser, #kb {
+    gap: 5px;
+}
+#kb_txt_display, textarea, button, input {
+    border: 1px solid white;
+    border-radius: 1em;
+    background-color: #0e0e0e;
+    color: white;
+}
+button:hover {
+    background-color: #333333;
+}
+textarea {
+    resize: None;
+}
+button {
+    align-self: center;
+}
+#kb {
+    flex: 1;
+    min-height: 0;
+}
+#kb_txt_display {
+    flex: 0.9;
+    min-height: 0;
+}
+textarea, #kb_txt_display {
+    font-size: 16px;
+}
+img {
+    flex: 0.9;
+}

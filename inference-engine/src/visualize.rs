@@ -3,6 +3,7 @@ use ab_glyph::{FontRef, PxScale};
 use image::{Rgb, RgbImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut, draw_text_mut};
 use imageproc::rect::Rect;
+use image::ImageBuffer;
 
 const FONT_BYTES: &[u8] = include_bytes!("../assets/DejaVuSansMono.ttf");
 const FONT_SCALE: f32 = 14.0;
@@ -30,7 +31,7 @@ struct NodeLayout {
     children: Vec<NodeLayout>,
 }
 
-pub fn proof_tree_to_png(tree: &ProofTree, output_path: &str) -> Result<(), String> {
+pub fn proof_tree_to_png(tree: &ProofTree, output_path: &str) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, String> {
     let layout = compute_layout(tree);
 
     let total_w = subtree_width(&layout) + MARGIN * 2;
@@ -42,7 +43,8 @@ pub fn proof_tree_to_png(tree: &ProofTree, output_path: &str) -> Result<(), Stri
 
     draw_node(&mut img, &layout, MARGIN, MARGIN, &font, scale);
 
-    img.save(output_path).map_err(|e| format!("Failed to save PNG: {}", e))
+    img.save(output_path).map_err(|e| format!("Failed to save PNG: {}", e))?;
+    Ok(img)
 }
 
 fn node_lines(tree: &ProofTree) -> Vec<String> {
