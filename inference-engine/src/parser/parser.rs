@@ -11,35 +11,44 @@ enum Token {
     ColonDash, // :-
 }
 
-fn tokenize(input: &str) -> Vec<Token> {
+#[derive(Debug)]
+pub enum ParseError {
+    UnexpectedChar(char),
+    UnterminatedQuotedAtom,
+    UnexpectedTokenAfterColon,
+    UnexpectedToken { expected: String, got: String },
+    UnexpectedEof,
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseError::UnexpectedChar(c) => write!(f, "Unexpected character: {:?}", c),
+            ParseError::UnterminatedQuotedAtom => write!(f, "Unterminated quoted atom"),
+            ParseError::UnexpectedTokenAfterColon => write!(f, "Unexpected character after ':'"),
+            ParseError::UnexpectedToken { expected, got } => {
+                write!(f, "Expected {}, got {}", expected, got)
+            }
+            ParseError::UnexpectedEof => write!(f, "Unexpected end of input"),
+        }
+    }
+}
+
+
+fn tokenize(input: &str) -> Result<Vec<Token>, ParseError> {
     let mut tokens = Vec::new();
     let mut chars = input.chars().peekable();
 
     while let Some(&ch) = chars.peek() {
         match ch {
-            // Skip whitespace
-            ' ' | '\t' | '\n' | '\r' => {
-                chars.next();
-            }
-            // Skip comments
+            ' ' | '\t' | '\n' | '\r' => { chars.next(); }
+
             '%' => while chars.next().map(|c| c != '\n').unwrap_or(false) {},
 
-            '(' => {
-                tokens.push(Token::LParen);
-                chars.next();
-            }
-            ')' => {
-                tokens.push(Token::RParen);
-                chars.next();
-            }
-            ',' => {
-                tokens.push(Token::Comma);
-                chars.next();
-            }
-            '.' => {
-                tokens.push(Token::Dot);
-                chars.next();
-            }
+            '(' => { tokens.push(Token::LParen);  chars.next(); }
+            ')' => { tokens.push(Token::RParen);  chars.next(); }
+            ',' => { tokens.push(Token::Comma);   chars.next(); }
+            '.' => { tokens.push(Token::Dot);     chars.next(); }
 
             ':' => {
                 chars.next();
@@ -47,60 +56,48 @@ fn tokenize(input: &str) -> Vec<Token> {
                     chars.next();
                     tokens.push(Token::ColonDash);
                 } else {
-                    panic!("Unexpected character after ':'");
+                    return Err(ParseError::UnexpectedTokenAfterColon);
                 }
             }
 
-            // Quoted atoms: 'like this'
             '\'' => {
                 chars.next();
                 let mut s = String::new();
                 loop {
                     match chars.next() {
                         Some('\'') => break,
-                        Some(c) => s.push(c),
-                        None => panic!("Unterminated quoted atom"),
+                        Some(c)    => s.push(c),
+                        None       => return Err(ParseError::UnterminatedQuotedAtom),
                     }
                 }
                 tokens.push(Token::Atom(s));
             }
 
-            // Atoms start with a lowercase letter
             c if c.is_ascii_lowercase() => {
                 let mut s = String::new();
                 s.push(chars.next().unwrap());
-                while chars
-                    .peek()
-                    .map(|c| c.is_alphanumeric() || *c == '_')
-                    .unwrap_or(false)
-                {
+                while chars.peek().map(|c| c.is_alphanumeric() || *c == '_').unwrap_or(false) {
                     s.push(chars.next().unwrap());
                 }
                 tokens.push(Token::Atom(s));
             }
 
-            // Variables start with uppercase or _
             c if c.is_ascii_uppercase() || c == '_' => {
                 let mut s = String::new();
                 s.push(chars.next().unwrap());
-                while chars
-                    .peek()
-                    .map(|c| c.is_alphanumeric() || *c == '_')
-                    .unwrap_or(false)
-                {
+                while chars.peek().map(|c| c.is_alphanumeric() || *c == '_').unwrap_or(false) {
                     s.push(chars.next().unwrap());
                 }
                 tokens.push(Token::Variable(s));
             }
 
-            other => panic!("Unexpected character: {:?}", other),
+            other => return Err(ParseError::UnexpectedChar(other)),
         }
     }
 
-    tokens
+    Ok(tokens)
 }
 
-// ─── Parser ──────────────────────────────────────────────────────────────────
 
 struct Parser {
     tokens: Vec<Token>,
@@ -116,92 +113,101 @@ impl Parser {
         self.tokens.get(self.pos)
     }
 
-    fn next(&mut self) -> Token {
-        let tok = self.tokens[self.pos].clone();
-        self.pos += 1;
-        tok
+    fn next_token(&mut self) -> Result<Token, ParseError> {
+        if self.pos < self.tokens.len() {
+            let tok = self.tokens[self.pos].clone();
+            self.pos += 1;
+            Ok(tok)
+        } else {
+            Err(ParseError::UnexpectedEof)
+        }
     }
 
-    fn expect(&mut self, expected: &Token) {
-        let tok = self.next();
-        assert_eq!(&tok, expected, "Expected {:?}, got {:?}", expected, tok);
+    fn expect(&mut self, expected: &Token) -> Result<(), ParseError> {
+        let tok = self.next_token()?;
+        if &tok == expected {
+            Ok(())
+        } else {
+            Err(ParseError::UnexpectedToken {
+                expected: format!("{:?}", expected),
+                got:      format!("{:?}", tok),
+            })
+        }
     }
 
-    /// Parse a single Term: atom, variable, or compound functor(args…)
-    fn parse_term(&mut self) -> Term {
-        match self.next() {
-            Token::Variable(name) => Term::Variable(name),
+    fn parse_term(&mut self) -> Result<Term, ParseError> {
+        match self.next_token()? {
+            Token::Variable(name) => Ok(Term::Variable(name)),
             Token::Atom(name) => {
-                // Compound if followed by '('
                 if self.peek() == Some(&Token::LParen) {
-                    self.expect(&Token::LParen);
-                    let mut args = vec![self.parse_term()];
+                    self.expect(&Token::LParen)?;
+                    let mut args = vec![self.parse_term()?];
                     while self.peek() == Some(&Token::Comma) {
-                        self.expect(&Token::Comma);
-                        args.push(self.parse_term());
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_term()?);
                     }
-                    self.expect(&Token::RParen);
-                    Term::Compound {
-                        functor: name,
-                        args,
-                    }
+                    self.expect(&Token::RParen)?;
+                    Ok(Term::Compound { functor: name, args })
                 } else {
-                    Term::Atom(name)
+                    Ok(Term::Atom(name))
                 }
             }
-            other => panic!("Expected a term, got {:?}", other),
+            other => Err(ParseError::UnexpectedToken {
+                expected: "a term".into(),
+                got:      format!("{:?}", other),
+            }),
         }
     }
 
-    /// Parse a comma-separated list of terms (rule body)
-    fn parse_term_list(&mut self) -> Vec<Term> {
-        let mut terms = vec![self.parse_term()];
+    fn parse_term_list(&mut self) -> Result<Vec<Term>, ParseError> {
+        let mut terms = vec![self.parse_term()?];
         while self.peek() == Some(&Token::Comma) {
-            self.expect(&Token::Comma);
-            terms.push(self.parse_term());
+            self.expect(&Token::Comma)?;
+            terms.push(self.parse_term()?);
         }
-        terms
+        Ok(terms)
     }
 
-    /// Parse one clause: fact `head.` or rule `head :- body.`
-    fn parse_clause(&mut self) -> Result<(Option<Fact>, Option<Rule>), ()> {
-        if self.peek().is_none() {
-            return Err(());
-        }
-        let head = self.parse_term();
+    fn parse_clause(&mut self) -> Result<(Option<Fact>, Option<Rule>), ParseError> {
+        let head = self.parse_term()?;
         match self.peek() {
             Some(Token::Dot) => {
-                self.expect(&Token::Dot);
+                self.expect(&Token::Dot)?;
                 Ok((Some(Fact { term: head }), None))
             }
             Some(Token::ColonDash) => {
-                self.expect(&Token::ColonDash);
-                let body = self.parse_term_list();
-                self.expect(&Token::Dot);
+                self.expect(&Token::ColonDash)?;
+                let body = self.parse_term_list()?;
+                self.expect(&Token::Dot)?;
                 Ok((None, Some(Rule { head, body })))
             }
-            other => panic!("Expected '.' or ':-', got {:?}", other),
+            other => Err(ParseError::UnexpectedToken {
+                expected: "'.' or ':-'".into(),
+                got:      format!("{:?}", other),
+            }),
         }
     }
 
-    /// Parse the entire input into a KnowledgeBase
-    fn parse_knowledge_base(&mut self) -> KnowledgeBase {
+    fn parse_knowledge_base(&mut self) -> (KnowledgeBase, Option<String>) {
         let mut kb = KnowledgeBase::new();
         while self.peek().is_some() {
             match self.parse_clause() {
-                Ok((Some(fact), None)) => {
-                    kb.add_fact(fact);
-                }
+                Ok((Some(fact), None)) => {kb.add_fact(fact);},
                 Ok((None, Some(rule))) => kb.add_rule(rule),
-                _ => break,
+                Ok(_) => break,
+                Err(e) => return (kb, Some(e.to_string())),
             }
         }
-        kb
+        (kb, None)
     }
 }
 
-pub fn parse(input: &str) -> KnowledgeBase {
-    let tokens = tokenize(input);
-    let mut parser = Parser::new(tokens);
-    parser.parse_knowledge_base()
+pub fn parse(input: &str) -> (KnowledgeBase, Option<String>) {
+    match tokenize(input) {
+        Err(e) => (KnowledgeBase::new(), Some(e.to_string())),
+        Ok(tokens) => {
+            let mut parser = Parser::new(tokens);
+            parser.parse_knowledge_base()
+        }
+    }
 }

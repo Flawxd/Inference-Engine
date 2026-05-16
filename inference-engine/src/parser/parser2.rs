@@ -1,5 +1,4 @@
-mod types;
-use types::*;
+use crate::types::*;
 
 fn strip_article_fr<'a>(words: &'a [&'a str]) -> &'a [&'a str] {
     match words.first() {

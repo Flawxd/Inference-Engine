@@ -1,5 +1,5 @@
 use dioxus::{desktop::{Config, WindowBuilder, trayicon::dpi::LogicalSize}, prelude::*};
-use crate::parser::parser;
+use crate::parser::{parser, parser2};
 use crate::types::*;
 use crate::engine::*;
 use crate::visualize::proof_tree_to_png;
@@ -8,6 +8,7 @@ use base64::{engine::general_purpose, Engine};
 use image::{Rgb, ImageBuffer};
 use std::path::Path;
 use dioxus_primitives::scroll_area::{ScrollArea, ScrollDirection};
+use std::hash::{Hash, DefaultHasher, Hasher};
 
 pub fn window_config() -> Config {
     let main_window = WindowBuilder::new()
@@ -24,10 +25,11 @@ pub fn window_config() -> Config {
 #[component]
 pub fn App() -> Element {
 	static CSS: Asset = asset!("/assets/main.css");
-	let mut to_parse = use_signal(|| "".to_string());
-	let mut backwards = use_signal(|| "".to_string());
+	let mut to_parse = use_signal(|| String::new());
+	let mut backwards = use_signal(|| String::new());
 	let mut kb = use_signal(|| KnowledgeBase::new());
 	let mut back_tree = use_signal(|| None);
+	let mut parse_err = use_signal(|| None);
 	rsx! {
 		document::Stylesheet { href: CSS }
 		div { id: "title",
@@ -48,18 +50,19 @@ pub fn App() -> Element {
 						    }
 						    key.prevent_default();
 						    let mut kb = kb.write();
-						    parse_button(&to_parse(), &mut kb);
+						    parse_err.set(parse_button(&to_parse(), &mut kb));
 						    to_parse.set(String::new());
 						},
 					}
 					button {
 						onclick: move |_| {
 						    let mut kb = kb.write();
-						    parse_button(&to_parse(), &mut kb);
+						    parse_err.set(parse_button(&to_parse(), &mut kb));
 						    to_parse.set(String::new());
 						},
 						"Submit"
 					}
+					{parse_err}
 				}
 				div { id: "file_input",
 					h3 { "Use a file instead" }
@@ -72,7 +75,7 @@ pub fn App() -> Element {
 						        let mut kb = kb.write();
 						        if !e.files().is_empty() {
 						            if let Ok(content) = e.files()[0].read_string().await {
-						                parse_button(&content, &mut kb);
+						                parse_err.set(parse_button(&content, &mut kb));
 						            }
 						        }
 						    }
@@ -122,7 +125,7 @@ pub fn App() -> Element {
 						"Search for this fact"
 					}
 				}
-				{back_tree}
+				div { id: "back_img", {back_tree} }
 			}
 		}
 	}
@@ -133,13 +136,29 @@ fn back_proof(backwards: &str, kb: KnowledgeBase) -> Option<Element> {
 	if backwards.is_empty() {
 		return None;
 	}
+	let term = match parse(backwards) {
+		Ok(k) => {
+			if k.facts.is_empty() {
+			return Some(rsx! {
+				p { color: "red", "please enter a fact" }
+			})}
+			&k.facts[0].term.clone()
+		}
+		Err(e) => return Some(rsx!{
+			p { color: "red", "{e}" }
+		})
+	};
 	let tree = backward::backward_chain(
-		&parser::parse(backwards).facts[0].term,
+		term,
 		&kb,
 	);
 	match tree {
 		Some(t) => {
-			let path = Path::new("./assets/back_proof_tree.png").to_str();
+			let mut h = DefaultHasher::new();
+			term.to_string().hash(&mut h);
+			let n = h.finish();
+			let path_str = format!("./assets/back_proof_tree_{}.png", n);
+			let path = Path::new(&path_str).to_str();
 			match proof_tree_to_png(&t, path?) {
 				Ok(img) => {
 					let img_src = get_img_src(img);
@@ -166,8 +185,21 @@ fn get_img_src(img: ImageBuffer<Rgb<u8>, Vec<u8>>) -> String {
 	format!("data:image/png;base64,{b64}")
 }
 
-fn parse_button(to_parse: &str, kb: &mut KnowledgeBase) {
-	let nb = parser::parse(&to_parse);
+fn parse_button(to_parse: &str, kb: &mut KnowledgeBase) -> Option<Element> {
+	let nb = match parse(to_parse) {
+		Ok(k) => k,
+		Err(e) => return Some(rsx!{
+			p { color: "red", "{e}" }
+		})
+	};
 	nb.facts.into_iter().for_each(|f| {kb.add_fact(f);});
 	nb.rules.into_iter().for_each(|r| {kb.add_rule(r);});
+	None
+}
+
+fn parse(input: &str) -> Result<KnowledgeBase, String> {
+	match parser::parse(input) {
+		(_, Some(_)) => parser2::parse_naturel_fr(input),
+		(kb, None) => Ok(kb)
+	}
 }

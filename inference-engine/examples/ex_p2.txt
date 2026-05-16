@@ -1,0 +1,9 @@
+Un chat est un animal.
+Un chien est un animal.
+Une baleine est un animal.
+Un chat a de la fourrure.
+Un chien possède de la fourrure.
+les mammifères sont des animaux.
+Toutes les baleines sont des mammifères.
+Si X est un animal et X a de la fourrure alors X est un mammifère.
+Si X est un mammifère alors X est un animal.

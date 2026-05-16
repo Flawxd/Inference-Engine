@@ -25,14 +25,14 @@ html, body {
     display: flex;
     gap: 1rem;
 }
-#left, #backwards, #parser, #kb, #chain {
+#left, #backwards, #parser, #kb, #chain, #back_img {
     flex-direction: column;
 }
 #left, #backwards {
     height: 80vh;
     flex: 0.45;
 }
-#chain, #parser, #kb {
+#chain, #parser, #kb, #back_img {
     gap: 5px;
 }
 #kb_txt_display, textarea, button, input {
@@ -50,17 +50,22 @@ textarea {
 button {
     align-self: center;
 }
-#kb {
+#kb, #kb_txt_display {
     flex: 1;
-    min-height: 0;
-}
-#kb_txt_display {
-    flex: 0.9;
     min-height: 0;
 }
 textarea, #kb_txt_display {
     font-size: 16px;
 }
+#back_img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
 img {
-    flex: 0.9;
+    max-width: 90%;
+    max-height: 100%;
+    object-fit: contain;
+    flex: 1;
 }
