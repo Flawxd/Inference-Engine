@@ -16,7 +16,7 @@ pub fn window_config() -> Config {
         .with_always_on_top(false)
 		.with_title("Inference Engine")
 		.with_resizable(true)
-        .with_inner_size(LogicalSize::new(1200.0, 720.0))
+        .with_inner_size(LogicalSize::new(1250.0, 720.0))
         .with_min_inner_size(LogicalSize::new(800.0, 600.0));
 
     Config::default()

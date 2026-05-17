@@ -119,7 +119,7 @@ fn export_pretty(kb: &KnowledgeBase) -> String {
     out.push_str(&format!(
         "% ── Knowledge Base ────────────────────────────────────\n\
          % Facts : {}  |  Rules : {}  |  Total : {}\n\
-         % ───────────────────────────────────────────────────────\n\n",
+         % ──────────────────────────────────────────────────────\n\n",
         kb.facts.len(),
         kb.rules.len(),
         kb.facts.len() + kb.rules.len(),

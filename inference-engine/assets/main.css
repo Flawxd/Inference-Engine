@@ -27,6 +27,7 @@ html, body {
     flex-direction: row;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     width: 100%;
     margin: auto;
 }
@@ -39,6 +40,9 @@ html, body {
 }
 #left, #backwards {
     flex: 0.45;
+}
+#left {
+    min-width: 0;
 }
 #chain, #parser, #kb, #back_img {
     gap: 5px;
