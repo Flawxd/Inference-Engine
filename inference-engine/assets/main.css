@@ -35,7 +35,7 @@ html, body {
 #chain, #parser, #kb, #back_img {
     gap: 5px;
 }
-#kb_txt_display, textarea, button, input {
+#kb_txt_display, textarea, button, input::file-selector-button {
     border: 1px solid white;
     border-radius: 1em;
     background-color: #0e0e0e;
