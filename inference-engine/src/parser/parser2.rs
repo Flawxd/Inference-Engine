@@ -4,7 +4,8 @@ fn strip_article_fr<'a>(words: &'a [&'a str]) -> &'a [&'a str] {
     match words.first() {
         Some(&"un")  | Some(&"une") | Some(&"des") |
         Some(&"de")  | Some(&"du")  | Some(&"le")  |
-        Some(&"la")  | Some(&"les") | Some(&"l")   => {
+        Some(&"la")  | Some(&"les") | Some(&"l")   |
+        Some(&"tous") | Some(&"toutes") => {
             strip_article_fr(&words[1..])
         },
         _ => words,
@@ -24,13 +25,6 @@ fn join_words(words: &[&str]) -> String {
         .filter(|w| !w.is_empty())
         .collect::<Vec<_>>()
         .join("_")
-}
-
-fn compound2(functor: &str, a: &str, b: &str) -> Term {
-    Term::Compound {
-        functor: functor.to_string(),
-        args: vec![Term::Atom(a.to_string()), Term::Atom(b.to_string())],
-    }
 }
 
 fn compound1_var(functor: &str, var: &str) -> Term {
@@ -81,6 +75,36 @@ fn parse_tous_sont(subject: &str, object: &str, kb: &mut KnowledgeBase) {
         head: compound1_var(object, "X"),
         body: vec![compound1_var(subject, "X")],
     });
+}
+
+fn try_parse_relation_binaire(ws: &[&str], kb: &mut KnowledgeBase) -> bool {
+    let Some(est_pos) = ws.iter().position(|w| *w == "est") else {
+        return false;
+    };
+    let subject_words = strip_article_fr(&ws[..est_pos]);
+    let after_est = strip_article_fr(&ws[est_pos + 1..]);
+
+    let Some(de_pos) = after_est.iter().rposition(|w| *w == "de") else {
+        return false;
+    };
+    let relation_words = &after_est[..de_pos];
+    let object_words   = strip_article_fr(&after_est[de_pos + 1..]);
+
+    if subject_words.is_empty() || relation_words.is_empty() || object_words.is_empty() {
+        return false;
+    }
+
+    let subject  = join_words(subject_words);
+    let relation = join_words(relation_words);
+    let object   = join_words(object_words);
+
+    kb.add_fact(Fact {
+        term: Term::Compound {
+            functor: relation,
+            args: vec![Term::Atom(subject), Term::Atom(object)],
+        },
+    });
+    true
 }
 
 fn parse_clause_condition<'a>(words: &[&'a str]) -> Option<Term> {
@@ -140,15 +164,12 @@ fn parse_sentence_fr(sentence: &str, kb: &mut KnowledgeBase) -> Result<(), Strin
     let trimmed = sentence.trim();
     if trimmed.is_empty() { return Ok(()); }
     let lower = trimmed.to_lowercase();
-
     if lower.starts_with("si ") {
         return parse_si_alors(trimmed, kb);
     }
-
     let raw_words: Vec<&str> = trimmed.split_whitespace().collect();
     let words: Vec<String>   = raw_words.iter().map(|w| clean(w)).collect();
     let ws: Vec<&str>        = words.iter().map(String::as_str).collect();
-
     let is_plural_trigger = matches!(ws.first(), Some(&"tous") | Some(&"toutes") | Some(&"les") | Some(&"le") | Some(&"la"));
     if is_plural_trigger {
         if let Some(sont_pos) = ws.iter().position(|w| *w == "sont") {
@@ -162,7 +183,9 @@ fn parse_sentence_fr(sentence: &str, kb: &mut KnowledgeBase) -> Result<(), Strin
             }
         }
     }
-
+    if try_parse_relation_binaire(&ws, kb) {
+        return Ok(());
+    }
     if let Some(est_pos) = ws.iter().position(|w| *w == "est") {
         let subject_words = strip_article_fr(&ws[..est_pos]);
         let object_words  = strip_article_fr(&ws[est_pos + 1..]);
@@ -173,7 +196,6 @@ fn parse_sentence_fr(sentence: &str, kb: &mut KnowledgeBase) -> Result<(), Strin
             return Ok(());
         }
     }
-
     if let Some(has_pos) = ws.iter().position(|w| *w == "a" || *w == "possède") {
         let subject_words = strip_article_fr(&ws[..has_pos]);
         let object_words  = strip_article_fr(&ws[has_pos + 1..]);
@@ -184,7 +206,6 @@ fn parse_sentence_fr(sentence: &str, kb: &mut KnowledgeBase) -> Result<(), Strin
             return Ok(());
         }
     }
-
     Err(format!("Phrase non reconnue : {:?}", trimmed))
 }
 
@@ -223,6 +244,7 @@ fn main() {
         Un chien est un animal.
         Une baleine est un animal.
         Un chat a de la fourrure.
+        tom est un grand parent de ann.
         Un chien possède de la fourrure.
         les mammifères sont des animaux.
         Toutes les baleines sont des mammifères.
