@@ -5,20 +5,29 @@ html, body {
     height: 100%;
     width: 100%;
     overflow: hidden;
-    flex-direction: row;
 }
 #title {
     text-align: center;
     height: 10vh;
 }
-#content, #left, #parser, #kb, #chain {
+#all {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    flex: 1;
+    height: 80vh;
+    gap: 1rem;
+}
+#content, #left, #parser, #kb, #chain, #all {
     display: flex;
     justify-content: space-evenly;
 }
 #content {
     display: flex;
     flex-direction: row;
-    height: 80vh;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
     margin: auto;
 }
 #backwards {
@@ -29,7 +38,6 @@ html, body {
     flex-direction: column;
 }
 #left, #backwards {
-    height: 80vh;
     flex: 0.45;
 }
 #chain, #parser, #kb, #back_img {
@@ -44,10 +52,18 @@ html, body {
 button:hover {
     background-color: #333333;
 }
+button:active {
+    background-color: #444444;
+}
 textarea {
     resize: None;
 }
-button {
+#kb_interact {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+#kb_interact, button {
     align-self: center;
 }
 #kb, #kb_txt_display {
@@ -68,4 +84,13 @@ img {
     max-height: 100%;
     object-fit: contain;
     flex: 1;
+}
+#export {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
